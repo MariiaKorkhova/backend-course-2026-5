@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const { program } = require('commander');
 
 const fsPromises = require('node:fs/promises');
+const superagent = require('superagent');
 
 program
     .requiredOption('-h, --host <type>')
@@ -31,8 +32,6 @@ if (!fs.existsSync(options.cache))
     console.log(`cache directory created: ${options.cache}`);
 }
 
-
-
 const server = http.createServer(async (req, res) =>
 {
     const httpCode = req.url.slice(1); 
@@ -45,12 +44,25 @@ const server = http.createServer(async (req, res) =>
                 try
                 {
                     const image = await fsPromises.readFile(filePath);
+
                     res.writeHead(200, { 'Content-Type': 'image/jpeg' });
                     res.end(image);
                 } catch (err)
                 {
-                    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-                    res.end('not found\n');
+                    try
+                    {
+                        const catResponse = await superagent.get(`https://http.cat/${httpCode}`);
+                        const imageBuffer = catResponse.body;
+                        
+                        await fsPromises.writeFile(filePath, imageBuffer);
+                        
+                        res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+                        res.end(imageBuffer);
+                    } catch (fetchErr)
+                    {
+                        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+                        res.end('not found\n');
+                    }
                 }
 
                 break;
@@ -91,7 +103,7 @@ const server = http.createServer(async (req, res) =>
                     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
                     res.end('not found\n');
                 }
-                
+
                 break;
 
             default:
@@ -105,9 +117,6 @@ const server = http.createServer(async (req, res) =>
         res.end('internal server error');
     }
 });
-
-
-
 
 server.listen(options.port, options.host, () =>
 {
