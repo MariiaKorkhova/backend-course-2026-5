@@ -52,6 +52,31 @@ const server = http.createServer(async (req, res) =>
                     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
                     res.end('not found\n');
                 }
+                
+                break;
+
+            case 'PUT':
+                try
+                {
+                    const chunks = [];
+
+                    for await (const chunk of req)
+                    {
+                        chunks.push(chunk);
+                    }
+
+                    const buffer = Buffer.concat(chunks);
+                
+                    await fsPromises.writeFile(filePath, buffer);
+                    
+                    res.writeHead(201, { 'Content-Type': 'text/plain; charset=utf-8' });
+                    res.end('сreated\n');
+                } catch (err)
+                {
+                    res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+                    res.end('internal server error\n');
+                }
+
                 break;
 
             default:
