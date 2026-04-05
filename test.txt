@@ -1,0 +1,10 @@
+curl -X OPTIONS http://127.0.0.1:8000/200
+curl -X GET http://127.0.0.1:8000/200
+// or
+curl -X GET http://127.0.0.1:8000/200 --output ok_200_cat.jpg
+
+curl -X GET -o not_found_cat.jpg https://http.cat/404
+curl -X PUT --data-binary @not_found_cat.jpg http://127.0.0.1:8000/404
+
+curl -i -X DELETE http://127.0.0.1:8000/404
+curl -i -X DELETE http://127.0.0.1:8000/999
