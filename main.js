@@ -52,7 +52,7 @@ const server = http.createServer(async (req, res) =>
                     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
                     res.end('not found\n');
                 }
-                
+
                 break;
 
             case 'PUT':
@@ -77,6 +77,21 @@ const server = http.createServer(async (req, res) =>
                     res.end('internal server error\n');
                 }
 
+                break;
+            
+            case 'DELETE':
+                try
+                {
+                    await fsPromises.unlink(filePath);
+                    
+                    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+                    res.end('deleted\n');
+                } catch (err)
+                {
+                    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+                    res.end('not found\n');
+                }
+                
                 break;
 
             default:
