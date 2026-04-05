@@ -3,6 +3,8 @@ const path = require('node:path');
 const fs = require('node:fs');
 const { program } = require('commander');
 
+const fsPromises = require('node:fs/promises');
+
 program
     .requiredOption('-h, --host <type>')
     .requiredOption('-p, --port <number>')
@@ -29,11 +31,43 @@ if (!fs.existsSync(options.cache))
     console.log(`cache directory created: ${options.cache}`);
 }
 
-const server = http.createServer((req, res) =>
+
+
+const server = http.createServer(async (req, res) =>
 {
-    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('proxy server ready to work');
+    const httpCode = req.url.slice(1); 
+    const filePath = path.join(options.cache, `${httpCode}.jpg`);
+
+    try {
+        switch (req.method)
+        {
+            case 'GET':
+                try
+                {
+                    const image = await fsPromises.readFile(filePath);
+                    res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+                    res.end(image);
+                } catch (err)
+                {
+                    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+                    res.end('not found\n');
+                }
+                break;
+
+            default:
+                res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+                res.end('method not allowed\n');
+                break;
+        }
+    } catch (error)
+    {
+        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('internal server error');
+    }
 });
+
+
+
 
 server.listen(options.port, options.host, () =>
 {
